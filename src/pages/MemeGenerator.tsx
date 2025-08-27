@@ -1,66 +1,94 @@
-import { useEffect, useRef, useState } from "react"
-import html2canvas from "html2canvas"
+import { useEffect, useRef, useState } from "react";
+import type { ChangeEvent } from "react";
+import html2canvas from "html2canvas";
+
+interface MemeApiResponse {
+    success: boolean;
+    data: {
+        memes: MemeApi[];
+    };
+}
+
+interface MemeApi {
+    id: string;
+    name: string;
+    url: string;
+    width: number;
+    height: number;
+    box_count: number;
+}
+
+interface MemeState {
+    name: string;
+    topText: string;
+    bottomText: string;
+    imgUrl: string;
+}
 
 function App() {
-    const [allMemes, setAllMemes] = useState([])
-    const [meme, setMeme] = useState({
-        name: '',
-        topText: '',
-        bottomText: '',
-        imgUrl: ''
-    })
-    const [canDownload, setCanDownload] = useState(false)
-    const memeRef = useRef(null)
+    const [allMemes, setAllMemes] = useState<MemeApi[]>([]);
+    const [meme, setMeme] = useState<MemeState>({
+        name: "",
+        topText: "",
+        bottomText: "",
+        imgUrl: "",
+    });
+    const [canDownload, setCanDownload] = useState<boolean>(false);
+    const memeRef = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
-        fetch('https://api.imgflip.com/get_memes')
-            .then(res => res.json())
-            .then(data => setAllMemes(data.data.memes))
-    }, [])
+        fetch("https://api.imgflip.com/get_memes")
+            .then((res) => res.json())
+            .then((data: MemeApiResponse) => setAllMemes(data.data.memes));
+    }, []);
 
     const getRandomMeme = () => {
-        const randomMemeIndex = Math.floor(Math.random() * allMemes.length)
-        const newMemeImg = allMemes[randomMemeIndex].url
+        if (allMemes.length === 0) return;
 
-        setCanDownload(false) // reset sebelum gambar baru dimuat
-        setMeme(prevMeme => ({
+        const randomMemeIndex = Math.floor(Math.random() * allMemes.length);
+        const newMeme = allMemes[randomMemeIndex];
+
+        setCanDownload(false); // reset sebelum gambar baru dimuat
+        setMeme((prevMeme) => ({
             ...prevMeme,
-            name: allMemes[randomMemeIndex].name,
-            imgUrl: newMemeImg
-        }))
-    }
+            name: newMeme.name,
+            imgUrl: newMeme.url,
+        }));
+    };
 
-    const handleInputChange = (e) => {
-        const { value, name } = e.target
+    const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+        const { value, name } = e.target;
 
-        setMeme(prevMeme => {
-            return {
-                ...prevMeme,
-                [name]: value
-            }
-        })
-    }
+        setMeme((prevMeme) => ({
+            ...prevMeme,
+            [name]: value,
+        }));
+    };
 
     const downloadMeme = () => {
-        if (!canDownload || !memeRef.current) return
+        if (!canDownload || !memeRef.current) return;
 
         html2canvas(memeRef.current, {
             useCORS: true,
             allowTaint: false,
-            backgroundColor: null
-        }).then(canvas => {
-            const link = document.createElement("a")
-            link.download = `${meme.name || "meme"}.png`
-            link.href = canvas.toDataURL("image/png")
-            link.click()
-        })
-    }
+            backgroundColor: null,
+        }).then((canvas) => {
+            const link = document.createElement("a");
+            link.download = `${meme.name || "meme"}.png`;
+            link.href = canvas.toDataURL("image/png");
+            link.click();
+        });
+    };
 
     return (
-        <div className='font-poppins flex justify-center my-10'>
+        <div className="font-poppins flex justify-center my-10">
             <div className="border-2 w-1/2 h-full">
                 <header className="flex w-full h-16 p-4 bg-gradient-to-r from-indigo-500 to-blue-500 space-x-4 justify-center">
-                    <img src="/favicon-meme-generator.png" alt="meme logo" className="h-full" />
+                    <img
+                        src="/favicon-meme-generator.png"
+                        alt="meme logo"
+                        className="h-full"
+                    />
                     <h1 className="flex items-center font-bold">Meme Generator</h1>
                 </header>
                 <main>
@@ -105,46 +133,46 @@ function App() {
                             </button>
                         )}
                     </div>
-                    {/* <button onClick={getRandomMeme} className="flex w-1/2 bg-gradient-to-r from-indigo-500 to-blue-500 p-2 rounded mx-auto justify-center hover:from-indigo-700 hover:to-blue-700 hover:text-white">Get a new meme image</button> */}
+
                     <div className="flex my-8 w-full items-center justify-center">
-                        {
-                            meme.imgUrl ?
-                                (
-                                    <div ref={memeRef} className="relative">
-                                        <p
-                                            className="absolute top-4 left-1/2 -translate-x-1/2 text-3xl text-white font-bold text-center"
-                                            style={{
-                                                WebkitTextStroke: '1px black', // Chrome & Safari
-                                                textStroke: '1px black' // Fallback
-                                            }}
-                                        >
-                                            {meme.topText}
-                                        </p>
-                                        <img
-                                            src={meme.imgUrl}
-                                            alt={meme.name}
-                                            className="h-[400px] px-6"
-                                            crossOrigin="anonymous"
-                                            onLoad={() => setCanDownload(true)} // penting!
-                                        />
-                                        <p
-                                            className="absolute bottom-4 left-1/2 -translate-x-1/2 text-3xl text-white font-bold text-center"
-                                            style={{
-                                                WebkitTextStroke: '1px black', // Chrome & Safari
-                                                textStroke: '1px black' // Fallback
-                                            }}
-                                        >
-                                            {meme.bottomText}
-                                        </p>
-                                    </div>
-                                ) :
-                                (<p className="bg-red-500 w-3/4 p-2 text-center rounded mx-auto">⚠️ No image generated. Click the button above first!</p>)
-                        }
+                        {meme.imgUrl ? (
+                            <div ref={memeRef} className="relative">
+                                <p
+                                    className="absolute top-4 left-1/2 -translate-x-1/2 text-3xl text-white font-bold text-center text-stroke"
+                                    style={{
+                                        WebkitTextStroke: "1px black",
+                                        // ["textStroke" as any]: "1px black",
+                                    }}
+                                >
+                                    {meme.topText}
+                                </p>
+                                <img
+                                    src={meme.imgUrl}
+                                    alt={meme.name}
+                                    className="h-[400px] px-6"
+                                    crossOrigin="anonymous"
+                                    onLoad={() => setCanDownload(true)}
+                                />
+                                <p
+                                    className="absolute bottom-4 left-1/2 -translate-x-1/2 text-3xl text-white font-bold text-center text-stroke"
+                                    style={{
+                                        WebkitTextStroke: "1px black",
+                                        // ["textStroke" as any]: "1px black",
+                                    }}
+                                >
+                                    {meme.bottomText}
+                                </p>
+                            </div>
+                        ) : (
+                            <p className="bg-red-500 w-3/4 p-2 text-center rounded mx-auto">
+                                ⚠️ No image generated. Click the button above first!
+                            </p>
+                        )}
                     </div>
                 </main>
             </div>
         </div>
-    )
+    );
 }
 
-export default App
+export default App;

@@ -1,63 +1,72 @@
-import Confetti from 'react-confetti'
-import { useEffect, useState } from 'react'
+import Confetti from "react-confetti";
+import { useEffect, useState } from "react";
+
+interface Dice {
+    id: number;
+    value: number;
+    isHeld: boolean;
+}
 
 function App() {
-    const [allDices, setAllDices] = useState([])
-    const [windowWidth, setWindowWidth] = useState(window.innerWidth)
-    const [windowHeight, setWindowHeight] = useState(window.innerHeight)
+    const [allDices, setAllDices] = useState<Dice[]>([]);
+    const [windowWidth, setWindowWidth] = useState<number>(window.innerWidth);
+    const [windowHeight, setWindowHeight] = useState<number>(window.innerHeight);
 
     const initiateDiceValue = () => {
-        const newDices = []
+        const newDices: Dice[] = [];
         for (let i = 1; i <= 10; i++) {
-            const randomNumber = Math.ceil(Math.random() * 6)
-            const newDice = {
+            const randomNumber = Math.ceil(Math.random() * 6);
+            const newDice: Dice = {
                 id: i,
                 value: randomNumber,
-                isHeld: false
-            }
-            newDices.push(newDice)
-            setAllDices(newDices)
+                isHeld: false,
+            };
+            newDices.push(newDice);
         }
-    }
+        setAllDices(newDices);
+    };
 
-    useEffect(initiateDiceValue, [])
+    useEffect(initiateDiceValue, []);
 
     useEffect(() => {
         const handleResize = () => {
-            setWindowWidth(window.innerWidth)
-            setWindowHeight(window.innerHeight)
-        }
-        window.addEventListener('resize', handleResize)
-        return () => window.removeEventListener('resize', handleResize)
-    }, [])
+            setWindowWidth(window.innerWidth);
+            setWindowHeight(window.innerHeight);
+        };
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+    }, []);
 
-    const allDicesElement = allDices.map(dice => {
-        return <button onClick={() => holdDice(dice.id)} key={dice.id} className={`w-8 h-8 rounded-md text-sm font-bold shadow-xl ${dice.isHeld ? 'bg-green-400 text-white' : 'bg-white text-cyan-700'}`}>{dice.value}</button>
-    })
+    const holdDice = (id: number) => {
+        const newDices = allDices.map((dice) =>
+            dice.id === id ? { ...dice, isHeld: !dice.isHeld } : dice
+        );
+        setAllDices(newDices);
+    };
 
     const shuffleDice = () => {
-        const newDices = allDices.map(dice => {
-            const randomNumber = Math.ceil(Math.random() * 6)
-            return dice.isHeld ? dice : { ...dice, value: randomNumber }
-        })
-        setAllDices(newDices)
-    }
+        const newDices = allDices.map((dice) => {
+            const randomNumber = Math.ceil(Math.random() * 6);
+            return dice.isHeld ? dice : { ...dice, value: randomNumber };
+        });
+        setAllDices(newDices);
+    };
 
-    const holdDice = (id) => {
-        const newDices = allDices.map(dice => {
-            return dice.id === id ? { ...dice, isHeld: !dice.isHeld } : dice
-        })
-        setAllDices(newDices)
-    }
+    const allDicesElement = allDices.map((dice) => (
+        <button
+            onClick={() => holdDice(dice.id)}
+            key={dice.id}
+            className={`w-8 h-8 rounded-md text-sm font-bold shadow-xl ${dice.isHeld ? "bg-green-400 text-white" : "bg-white text-cyan-700"
+                }`}
+        >
+            {dice.value}
+        </button>
+    ));
 
-    // const hasWon = allDices.length > 0 &&
-    //     allDices.every(dice => dice.isHeld) &&
-    //     allDices.every(dice => dice.value === allDices[0].value)
-
-    const isAllHeld = allDices.length > 0 && allDices.every(dice => dice.isHeld)
-    const hasWon = isAllHeld && allDices.every(dice => dice.value === allDices[0].value)
-    const hasConflict = isAllHeld && !hasWon
-
+    const isAllHeld = allDices.length > 0 && allDices.every((dice) => dice.isHeld);
+    const hasWon =
+        isAllHeld && allDices.every((dice) => dice.value === allDices[0].value);
+    const hasConflict = isAllHeld && !hasWon;
 
     return (
         <div className="font-inter flex flex-col items-center mt-20">
@@ -72,7 +81,10 @@ function App() {
             )}
             <main className="border-2 rounded-md border-slate-300 w-96 shadow-xl p-8 text-center bg-slate-200">
                 <h1 className="font-bold text-cyan-700">TENZI GAME</h1>
-                <p className="text-cyan-700 text-sm">Roll until all dice are the same. Click each die to freeze it at its current value between rolls.</p>
+                <p className="text-cyan-700 text-sm">
+                    Roll until all dice are the same. Click each die to freeze it at its
+                    current value between rolls.
+                </p>
                 <div className="p-4 grid grid-cols-5 gap-2 justify-items-center w-[70%] mx-auto">
                     {allDicesElement}
                 </div>
@@ -85,20 +97,34 @@ function App() {
                 )}
                 {hasConflict && (
                     <h2 className="text-red-500 text-sm font-semibold mt-2 mb-4 animate-pulse">
-                        🤔 So close! You’ve held all the dice, but the numbers still don’t match.
+                        🤔 So close! You’ve held all the dice, but the numbers still don’t
+                        match.
                     </h2>
                 )}
 
-                {
-                    hasWon ? <button onClick={initiateDiceValue} className="py-1 px-3 border-2 rounded-md bg-green-500 font-bold text-white text-sm hover:bg-green-700">Reset Game</button> :
-                        <button onClick={shuffleDice} className="py-1 px-3 border-2 rounded-md bg-cyan-500 font-bold text-white text-sm hover:bg-cyan-700">Roll</button>
-                }
+                {hasWon ? (
+                    <button
+                        onClick={initiateDiceValue}
+                        className="py-1 px-3 border-2 rounded-md bg-green-500 font-bold text-white text-sm hover:bg-green-700"
+                    >
+                        Reset Game
+                    </button>
+                ) : (
+                    <button
+                        onClick={shuffleDice}
+                        className="py-1 px-3 border-2 rounded-md bg-cyan-500 font-bold text-white text-sm hover:bg-cyan-700"
+                    >
+                        Roll
+                    </button>
+                )}
             </main>
-            <footer className='text-xs mt-4 w-96 text-center'>
-                <a href="https://www.flaticon.com/free-icons/dice" title="dice icons">Dice icons created by bearicons - Flaticon</a>
+            <footer className="text-xs mt-4 w-96 text-center">
+                <a href="https://www.flaticon.com/free-icons/dice" title="dice icons">
+                    Dice icons created by bearicons - Flaticon
+                </a>
             </footer>
         </div>
-    )
+    );
 }
 
-export default App
+export default App;
